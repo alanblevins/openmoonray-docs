@@ -186,6 +186,17 @@ The other environment variables set up by *setup.sh* are:
 
 *setup.py* doesn't set up PYTHONPATH to include the Python modules that come with USD. It doesn't need to be set for MoonRay's purposes, but the *hd_render* command will log a series of warnings that they are not found. This isn't harmful, because *hd_render* doesn't invoke Python code.
 
+*setup.sh* will also check check the enviroment's file descriptor limit and attempt to raise it if it is potentially too low. 
+
+```bash
+ulimit -Sn 65536
+```
+
+Large production scenes (like the ALab example scene) may require thousands of texture files to be open simultaneously, 
+but if the file descriptor limit is too low (the default is often 256 or 1024 depending on your OS), 
+the render may be incorrect due to missing textures because of insufficient
+file descriptors available to the MoonRay process.
+
 ---
 ## Testing the install
 ---
