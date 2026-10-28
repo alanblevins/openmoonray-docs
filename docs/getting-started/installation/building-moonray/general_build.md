@@ -189,12 +189,14 @@ The other environment variables set up by *setup.sh* are:
 *setup.sh* will also check check the enviroment's file descriptor limit and attempt to raise it if it is potentially too low. 
 
 ```bash
-ulimit -Sn 65536
+ulimit -Sn 65535
 ```
 
 Large production scenes (like the ALab example scene) may require thousands of texture files to be open simultaneously, 
 but if the file descriptor limit is too low (the default is often 256 or 1024 depending on your OS), 
-the render may have missing textures due to insufficient file descriptors available to the MoonRay process.
+the render may have missing textures due to insufficient file descriptors available to the MoonRay process. The new limit
+of 65535 is a suggested size for handling large scenes,
+your actual needs may vary.
 
 ---
 ## Testing the install
