@@ -194,8 +194,7 @@ ulimit -Sn 65536
 
 Large production scenes (like the ALab example scene) may require thousands of texture files to be open simultaneously, 
 but if the file descriptor limit is too low (the default is often 256 or 1024 depending on your OS), 
-the render may be incorrect due to missing textures because of insufficient
-file descriptors available to the MoonRay process.
+the render may have missing textures due to insufficient file descriptors available to the MoonRay process.
 
 ---
 ## Testing the install
