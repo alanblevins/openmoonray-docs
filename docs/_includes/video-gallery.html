@@ -3,7 +3,7 @@
 {%- for vid in include.videos -%}
   <figure>
     <video controls loop muted>
-      <source src="{{ include.data.image_path | absolute_url}}/{{ vid.video }}" alt="{{vid.text}}">
+      <source src="{{ include.data.image_path | absolute_url}}/{{ vid.video }}" alt="{{vid.text | escape}}">
     </video>
     {% if vid.text %}
       <figcaption>

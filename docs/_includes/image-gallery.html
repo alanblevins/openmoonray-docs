@@ -2,14 +2,17 @@
 <div class="gallery-grid">
 {%- for img in include.images -%}
   <figure>
-    <img src="{{ include.data.image_path | absolute_url}}/{{ img.image }}" alt="{{img.text}}" lightbox>
-    {% if img.text %}
+    <img src="{{ include.data.image_path | absolute_url}}/{{ img.image }}" alt="{{img.text | escape}}" lightbox>
+    {% if img.text or img.scene %}
       <figcaption>
       {{img.text}}
+      {% if img.scene and include.data.doc_scenes %}
+        {%- assign scene_path = "/assets/doc-scenes/" | append: include.data.doc_scenes | append: "/" | append: img.scene -%}
+        <br><a href="{{ scene_path | absolute_url }}" download>scene</a>
+      {% endif %}
       </figcaption>
     {% endif %}
   </figure>
 {% endfor %}
 </div>
 {% endif %}
-

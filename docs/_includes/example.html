@@ -1,7 +1,10 @@
 {% if include.data %}
-{% if include.data.example %}
+{% if include.data.example or include.data.doc_scenes %}
 ---
 ## Examples
+{% if include.data.example %}
 {%include_relative {{include.data.example}}%}
+{% endif %}
+{%- include doc-scenes.html path=include.data.doc_scenes -%}
 {% endif %}
 {% endif %}

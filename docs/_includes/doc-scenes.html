@@ -1,0 +1,48 @@
+{% comment %}
+Lists the downloadable documentation scenes in assets/doc-scenes/<include.path>.
+Files directly in the folder are listed first; each subfolder is collapsible.
+Markdown files are skipped, since GitHub Pages renders them as pages rather
+than serving them as files.
+{% endcomment %}
+{% if include.path %}
+{%- assign prefix = "/assets/doc-scenes/" | append: include.path | append: "/" -%}
+{%- assign files = site.static_files | where_exp: "f", "f.path contains prefix" | where_exp: "f", "f.extname != '.md'" | sort: "path" -%}
+{% if files.size > 0 %}
+{%- assign subdirs = "" -%}
+{%- for f in files -%}
+  {%- assign rel = f.path | remove_first: prefix -%}
+  {%- if rel contains "/" -%}
+    {%- assign dir = rel | split: "/" | first -%}
+    {%- assign subdirs = subdirs | append: dir | append: "|" -%}
+  {%- endif -%}
+{%- endfor -%}
+{%- assign subdirs = subdirs | split: "|" | uniq -%}
+<div class="doc-scenes">
+<h3 id="example-scenes">Example scenes</h3>
+<p>Scenes and the script that generates them. Images on this page were rendered from these scenes. Keep the folder layout when downloading, since scenes refer to textures with relative paths, and render from the folder containing the script, e.g. <code>moonray -in wedges/&lt;scene&gt;.rdla -out out.exr</code>.</p>
+<ul>
+{%- for f in files -%}
+  {%- assign rel = f.path | remove_first: prefix -%}
+  {%- unless rel contains "/" %}
+  <li><a href="{{ f.path | absolute_url }}" download><code>{{ rel }}</code></a></li>
+  {%- endunless -%}
+{%- endfor %}
+</ul>
+{%- for dir in subdirs -%}
+  {%- assign dir_prefix = dir | append: "/" %}
+<details>
+  <summary><code>{{ dir_prefix }}</code></summary>
+  <ul>
+  {%- for f in files -%}
+    {%- assign rel = f.path | remove_first: prefix -%}
+    {%- assign rel_start = rel | slice: 0, dir_prefix.size -%}
+    {%- if rel_start == dir_prefix %}
+    <li><a href="{{ f.path | absolute_url }}" download><code>{{ rel }}</code></a></li>
+    {%- endif -%}
+  {%- endfor %}
+  </ul>
+</details>
+{%- endfor %}
+</div>
+{% endif %}
+{% endif %}
