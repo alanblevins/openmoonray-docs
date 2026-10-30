@@ -23,7 +23,7 @@ title: SpotLight
       <b>Float</b>
       <br>
       default: 1.0
-      <p class="scene-class-comments">The aspect ratio of the lens - its local y dimension divided by its local x dimension. Values other than 1.0 will give the lens a non-circular elliptical shape.</p>
+      <p class="scene-class-comments">The aspect ratio of the lens - its local x dimension divided by its local y dimension. Values other than 1.0 will give the lens a non-circular elliptical shape.</p>
       {%-include image-gallery.html images=site.data.user-reference.scene-objects.lights.SpotLight.attributes.aspect_ratio.images data=site.data.user-reference.scene-objects.lights.SpotLight-%}
       {%-include video-gallery.html videos=site.data.user-reference.scene-objects.lights.SpotLight.attributes.aspect_ratio.videos data=site.data.user-reference.scene-objects.lights.SpotLight-%}
       {%-include see-also.html links=site.data.user-reference.scene-objects.lights.SpotLight.attributes.aspect_ratio.links heading=4-%}
@@ -33,7 +33,7 @@ title: SpotLight
       <b>Float</b>
       <br>
       default: 10000000000.0
-      <p class="scene-class-comments">The distance from the SpotLight's position, measured in the direction the light is pointing, at which the projected image will be in focus.</p>
+      <p class="scene-class-comments">The distance from the SpotLight's position, measured in the direction the light is pointing, at which the projected image will be in focus. The default is effectively infinite, so the projection is blurred unless lens_radius is very small. To project a sharp texture, set this to the distance from the light to the surface being lit.</p>
       {%-include image-gallery.html images=site.data.user-reference.scene-objects.lights.SpotLight.attributes.focal_plane_distance.images data=site.data.user-reference.scene-objects.lights.SpotLight-%}
       {%-include video-gallery.html videos=site.data.user-reference.scene-objects.lights.SpotLight.attributes.focal_plane_distance.videos data=site.data.user-reference.scene-objects.lights.SpotLight-%}
       {%-include see-also.html links=site.data.user-reference.scene-objects.lights.SpotLight.attributes.focal_plane_distance.links heading=4-%}
@@ -43,7 +43,7 @@ title: SpotLight
       <b>Float</b>
       <br>
       default: 30.0
-      <p class="scene-class-comments">The apex angle of the bright inner cone of the light emitted by the SpotLight. Full illumination takes place inside this region. This is a full angle, measured from one side to the other. There is a falloff function applied between the outer and inner cones - see the angle_falloff_type attribute.</p>
+      <p class="scene-class-comments">The apex angle, in degrees, of the bright inner cone of the light emitted by the SpotLight. Full illumination takes place inside this region. This is a full angle, measured from one side to the other. Values greater than outer_cone_angle are clamped to outer_cone_angle. There is a falloff function applied between the outer and inner cones - see the angle_falloff_type attribute.</p>
       {%-include image-gallery.html images=site.data.user-reference.scene-objects.lights.SpotLight.attributes.inner_cone_angle.images data=site.data.user-reference.scene-objects.lights.SpotLight-%}
       {%-include video-gallery.html videos=site.data.user-reference.scene-objects.lights.SpotLight.attributes.inner_cone_angle.videos data=site.data.user-reference.scene-objects.lights.SpotLight-%}
       {%-include see-also.html links=site.data.user-reference.scene-objects.lights.SpotLight.attributes.inner_cone_angle.links heading=4-%}
@@ -53,7 +53,7 @@ title: SpotLight
       <b>Float</b>
       <br>
       default: 1.0
-      <p class="scene-class-comments">The radius of the SpotLight's lens (when the aspect ratio is 1.0, so that the lens is circular).</p>
+      <p class="scene-class-comments">The radius of the SpotLight's lens along its local x axis. The radius along its local y axis is lens_radius / aspect_ratio.</p>
       {%-include image-gallery.html images=site.data.user-reference.scene-objects.lights.SpotLight.attributes.lens_radius.images data=site.data.user-reference.scene-objects.lights.SpotLight-%}
       {%-include video-gallery.html videos=site.data.user-reference.scene-objects.lights.SpotLight.attributes.lens_radius.videos data=site.data.user-reference.scene-objects.lights.SpotLight-%}
       {%-include see-also.html links=site.data.user-reference.scene-objects.lights.SpotLight.attributes.lens_radius.links heading=4-%}
@@ -63,7 +63,7 @@ title: SpotLight
       <b>Float</b>
       <br>
       default: 60.0
-      <p class="scene-class-comments">The apex angle of the bounding cone of the light emitted by the SpotLight. No illumination takes placeoutside this angle. This is a full angle, measured from one side to the other. There is a falloff function applied between the outer and inner cones - see the angle_falloff_type attribute.</p>
+      <p class="scene-class-comments">The apex angle, in degrees, of the bounding cone of the light emitted by the SpotLight. No illumination takes place outside this angle. This is a full angle, measured from one side to the other. There is a falloff function applied between the outer and inner cones - see the angle_falloff_type attribute.</p>
       {%-include image-gallery.html images=site.data.user-reference.scene-objects.lights.SpotLight.attributes.outer_cone_angle.images data=site.data.user-reference.scene-objects.lights.SpotLight-%}
       {%-include video-gallery.html videos=site.data.user-reference.scene-objects.lights.SpotLight.attributes.outer_cone_angle.videos data=site.data.user-reference.scene-objects.lights.SpotLight-%}
       {%-include see-also.html links=site.data.user-reference.scene-objects.lights.SpotLight.attributes.outer_cone_angle.links heading=4-%}
@@ -92,7 +92,7 @@ title: SpotLight
       <b>Float</b>
       <br>
       default: 0.001
-      <p class="scene-class-comments">The radiance used for rendering the SpotLight lens as seen through the camera via a primary ray, when the true computed radiance would otherwise be black. This is simply a convenience feature to make the SpotLight lens visible in the camera view.</p>
+      <p class="scene-class-comments">The brightness of the SpotLight lens as seen through the camera via a primary ray, when the true computed radiance would otherwise be black, as a fraction of the light's radiance. This is simply a convenience feature to make the SpotLight lens visible in the camera view, and has no effect on how the light illuminates the scene.</p>
       {%-include image-gallery.html images=site.data.user-reference.scene-objects.lights.SpotLight.attributes.black_level.images data=site.data.user-reference.scene-objects.lights.SpotLight-%}
       {%-include video-gallery.html videos=site.data.user-reference.scene-objects.lights.SpotLight.attributes.black_level.videos data=site.data.user-reference.scene-objects.lights.SpotLight-%}
       {%-include see-also.html links=site.data.user-reference.scene-objects.lights.SpotLight.attributes.black_level.links heading=4-%}
@@ -127,7 +127,7 @@ title: SpotLight
       <b>Rgb</b>
       <br>
       default: [ 1, 1, 1 ]
-      <p class="scene-class-comments">Per-channel gamma used in color-correcting the light's texture, if one is present. This is achieved by applying the following formula for each channel:<br>  For input &gt;  0, output = pow(input, gamma)<br>  For input &lt;= 0, output = input</p>
+      <p class="scene-class-comments">Per-channel gamma used in color-correcting the light's texture, if one is present. This is achieved by applying the following formula for each channel:<br>  For input &gt;  0, output = pow(input, 1 / gamma)<br>  For input &lt;= 0, output = input</p>
       {%-include image-gallery.html images=site.data.user-reference.scene-objects.lights.SpotLight.attributes.gamma.images data=site.data.user-reference.scene-objects.lights.SpotLight-%}
       {%-include video-gallery.html videos=site.data.user-reference.scene-objects.lights.SpotLight.attributes.gamma.videos data=site.data.user-reference.scene-objects.lights.SpotLight-%}
       {%-include see-also.html links=site.data.user-reference.scene-objects.lights.SpotLight.attributes.gamma.links heading=4-%}
@@ -167,7 +167,7 @@ title: SpotLight
       <b>String</b> <i>filename</i>
       <br>
       default: 
-      <p class="scene-class-comments">File name of the texture applied to the light. If set to the empty string, no texture is applied. Any file format supported by OpenImageIO can be used. The texture is used in 2 ways - for looking up the texture value at the intersection point when a ray hits the light, and for building a lookup-table-based auxilliary data structure used for distributing light samples over the texture.</p>
+      <p class="scene-class-comments">File name of the texture applied to the light. If set to the empty string, no texture is applied. Any file format supported by OpenImageIO can be used. The texture is used in 2 ways - for looking up the texture value at the intersection point when a ray hits the light, and for building a lookup-table-based auxilliary data structure used for distributing light samples over the texture.<br>Color correction is applied to the texture in this order: saturation, contrast, gamma, gain and offset, then temperature, after which negative values are clamped to 0.</p>
       {%-include image-gallery.html images=site.data.user-reference.scene-objects.lights.SpotLight.attributes.texture.images data=site.data.user-reference.scene-objects.lights.SpotLight-%}
       {%-include video-gallery.html videos=site.data.user-reference.scene-objects.lights.SpotLight.attributes.texture.videos data=site.data.user-reference.scene-objects.lights.SpotLight-%}
       {%-include see-also.html links=site.data.user-reference.scene-objects.lights.SpotLight.attributes.texture.links heading=4-%}
@@ -187,7 +187,7 @@ title: SpotLight
       <b>Vec2f</b>
       <br>
       default: [ 1, 1 ]
-      <p class="scene-class-comments">Texture scales in the u and v-directions.</p>
+      <p class="scene-class-comments">The fraction of the light, in u and v, that the texture covers. Values less than 1 shrink the texture towards its (0, 0) corner, and the rest of the light shows texture_border_color.</p>
       {%-include image-gallery.html images=site.data.user-reference.scene-objects.lights.SpotLight.attributes.texture_coverage.images data=site.data.user-reference.scene-objects.lights.SpotLight-%}
       {%-include video-gallery.html videos=site.data.user-reference.scene-objects.lights.SpotLight.attributes.texture_coverage.videos data=site.data.user-reference.scene-objects.lights.SpotLight-%}
       {%-include see-also.html links=site.data.user-reference.scene-objects.lights.SpotLight.attributes.texture_coverage.links heading=4-%}
@@ -237,7 +237,7 @@ title: SpotLight
       <b>Float</b>
       <br>
       default: 0.0
-      <p class="scene-class-comments">Clockwise rotation angle in degrees.</p>
+      <p class="scene-class-comments">Clockwise rotation angle in degrees. The texture rotates about its (0, 0) corner, not its center.</p>
       {%-include image-gallery.html images=site.data.user-reference.scene-objects.lights.SpotLight.attributes.texture_rotation.images data=site.data.user-reference.scene-objects.lights.SpotLight-%}
       {%-include video-gallery.html videos=site.data.user-reference.scene-objects.lights.SpotLight.attributes.texture_rotation.videos data=site.data.user-reference.scene-objects.lights.SpotLight-%}
       {%-include see-also.html links=site.data.user-reference.scene-objects.lights.SpotLight.attributes.texture_rotation.links heading=4-%}
@@ -262,7 +262,7 @@ title: SpotLight
       <b>Bool</b>
       <br>
       default: True
-      <p class="scene-class-comments">Whether to apply scene scale variable when normalized.</p>
+      <p class="scene-class-comments">Only used when normalized is true. When set to true, the normalized radiance is also divided by pi * scene_scale * scene_scale, where scene_scale is the SceneVariables attribute (0.01 by default). At the default scene scale this makes the light about 3183 times brighter.</p>
       {%-include image-gallery.html images=site.data.user-reference.scene-objects.lights.SpotLight.attributes.apply_scene_scale.images data=site.data.user-reference.scene-objects.lights.SpotLight-%}
       {%-include video-gallery.html videos=site.data.user-reference.scene-objects.lights.SpotLight.attributes.apply_scene_scale.videos data=site.data.user-reference.scene-objects.lights.SpotLight-%}
       {%-include see-also.html links=site.data.user-reference.scene-objects.lights.SpotLight.attributes.apply_scene_scale.links heading=4-%}
@@ -272,7 +272,7 @@ title: SpotLight
       <b>Float</b>
       <br>
       default: 0.0
-      <p class="scene-class-comments">Shadows less than this distance from the light are ignored. Setting this value to 0.0 or less effectively disables this feature.</p>
+      <p class="scene-class-comments">Objects closer than this distance to the light do not cast shadows from it. Setting this value to 0.0 or less effectively disables this feature. When clear_radius_falloff_distance is greater than 0, it is instead the distance of the light-receiving point from the light that is used: points closer than clear_radius receive no shadows from the light.</p>
       {%-include image-gallery.html images=site.data.user-reference.scene-objects.lights.SpotLight.attributes.clear_radius.images data=site.data.user-reference.scene-objects.lights.SpotLight-%}
       {%-include video-gallery.html videos=site.data.user-reference.scene-objects.lights.SpotLight.attributes.clear_radius.videos data=site.data.user-reference.scene-objects.lights.SpotLight-%}
       {%-include see-also.html links=site.data.user-reference.scene-objects.lights.SpotLight.attributes.clear_radius.links heading=4-%}
@@ -345,7 +345,7 @@ title: SpotLight
       <b>Float</b>
       <br>
       default: 0.0
-      <p class="scene-class-comments">The distance from the light beyond which a light-receiving surface will no longer receive shadows cast from that light.<br>Note that the distance is thresholded for each occlusion ray cast for this light, it is possible for a receiving point to lie at an intermediate distance such that some parts of the light are closer than the threshold distance and other parts beyond it, in which case the point will appearto be in partial shadow.</p>
+      <p class="scene-class-comments">The distance from a light-receiving point, measured along the shadow ray towards the light, beyond which objects no longer cast shadows from that light onto the point. 0 means no limit.<br>Note that the distance is thresholded for each occlusion ray cast for this light, it is possible for a receiving point to lie at an intermediate distance such that some parts of the light are closer than the threshold distance and other parts beyond it, in which case the point will appearto be in partial shadow.</p>
       {%-include image-gallery.html images=site.data.user-reference.scene-objects.lights.SpotLight.attributes.max_shadow_distance.images data=site.data.user-reference.scene-objects.lights.SpotLight-%}
       {%-include video-gallery.html videos=site.data.user-reference.scene-objects.lights.SpotLight.attributes.max_shadow_distance.videos data=site.data.user-reference.scene-objects.lights.SpotLight-%}
       {%-include see-also.html links=site.data.user-reference.scene-objects.lights.SpotLight.attributes.max_shadow_distance.links heading=4-%}
@@ -355,7 +355,7 @@ title: SpotLight
       <b>Bool</b>
       <br>
       default: False
-      <p class="scene-class-comments">Whether motion-blur is active for this light. When set to true, the scene's illumination will correctly account for any blur() applied to the light's transformation matrix.</p>
+      <p class="scene-class-comments">Whether motion-blur is active for this light. When set to true, the scene's illumination will correctly account for any blur() applied to the light's transformation matrix. Motion blur must also be enabled with the SceneVariables attribute enable_motion_blur.</p>
       {%-include image-gallery.html images=site.data.user-reference.scene-objects.lights.SpotLight.attributes.mb.images data=site.data.user-reference.scene-objects.lights.SpotLight-%}
       {%-include video-gallery.html videos=site.data.user-reference.scene-objects.lights.SpotLight.attributes.mb.videos data=site.data.user-reference.scene-objects.lights.SpotLight-%}
       {%-include see-also.html links=site.data.user-reference.scene-objects.lights.SpotLight.attributes.mb.links heading=4-%}
@@ -365,7 +365,7 @@ title: SpotLight
       <b>Float</b>
       <br>
       default: 0.0
-      <p class="scene-class-comments">The distance from the light before which a light-receiving surface will no longer receive shadows cast from that light.<br>Note that the distance is thresholded for each occlusion ray cast for this light, it is possible for a receiving point to lie at an intermediate distance such that some parts of the light are closer than the threshold distance and other parts beyond it, in which case the point will appearto be in partial shadow.</p>
+      <p class="scene-class-comments">The distance from a light-receiving point, measured along the shadow ray towards the light, within which objects do not cast shadows from that light onto the point.<br>Note that the distance is thresholded for each occlusion ray cast for this light, it is possible for a receiving point to lie at an intermediate distance such that some parts of the light are closer than the threshold distance and other parts beyond it, in which case the point will appearto be in partial shadow.</p>
       {%-include image-gallery.html images=site.data.user-reference.scene-objects.lights.SpotLight.attributes.min_shadow_distance.images data=site.data.user-reference.scene-objects.lights.SpotLight-%}
       {%-include video-gallery.html videos=site.data.user-reference.scene-objects.lights.SpotLight.attributes.min_shadow_distance.videos data=site.data.user-reference.scene-objects.lights.SpotLight-%}
       {%-include see-also.html links=site.data.user-reference.scene-objects.lights.SpotLight.attributes.min_shadow_distance.links heading=4-%}
@@ -420,7 +420,7 @@ title: SpotLight
           &nbsp;&nbsp;1 = &ldquo;bilinear&rdquo;<br>
           &nbsp;&nbsp;2 = &ldquo;nearest neighbor with nearest mip&rdquo;<br>
           &nbsp;&nbsp;3 = &ldquo;bilinear with nearest mip&rdquo;<br>
-      <p class="scene-class-comments">The filtering mode to apply to the texture. Nearest neighbor is the cheapest filtering mode but produces a blocky result. Switch linear filtering on for a smoother result. Additionally, mip-mapping can be switched on with either nearest neighbor or linear filtering.</p>
+      <p class="scene-class-comments">The filtering mode to apply to the texture. Nearest neighbor is the cheapest filtering mode but produces a blocky result. Switch linear filtering on for a smoother result. Additionally, mip-mapping can be switched on with either nearest neighbor or linear filtering. Only EnvLight and DistantLight use mip-mapping; on other lights the mip options have no effect.</p>
       {%-include image-gallery.html images=site.data.user-reference.scene-objects.lights.SpotLight.attributes.texture_filter.images data=site.data.user-reference.scene-objects.lights.SpotLight-%}
       {%-include video-gallery.html videos=site.data.user-reference.scene-objects.lights.SpotLight.attributes.texture_filter.videos data=site.data.user-reference.scene-objects.lights.SpotLight-%}
       {%-include see-also.html links=site.data.user-reference.scene-objects.lights.SpotLight.attributes.texture_filter.links heading=4-%}
