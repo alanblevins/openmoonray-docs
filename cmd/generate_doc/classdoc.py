@@ -1,5 +1,7 @@
 import argparse
 import os.path
+import subprocess
+import sys
 from collections import OrderedDict
 import re
 import scene_rdl2
@@ -180,8 +182,27 @@ def parse_args():
                         help='Specify output directory. This should likely be the "docs" folder in your documentation repo')
     parser.add_argument('-a','--all', action='store_true',
                         help='Generate all classes')
+    parser.add_argument('--images', action='store_true',
+                        help='Also render documentation images with generate_doc_images: with -a, for '
+                             'every class with a manifest.json; with -c, the class must have one')
 
-    return parser.parse_args()
+    args = parser.parse_args()
+    if args.images and args.interface:
+        parser.error('--images can\'t be used with -i; use -a or -c')
+    return args
+
+def render_images(args):
+    """ runs generate_doc_images for the same classes and docs folder"""
+    script = os.path.join(os.path.dirname(os.path.abspath(__file__)),
+                          '..', 'generate_doc_images', 'generate_doc_images.py')
+    cmd = [sys.executable, script]
+    cmd += ['-a'] if args.all else ['-c', args.class_name]
+    if args.dir:
+        cmd += ['-d', args.dir]
+    sys.stdout.flush()
+    result = subprocess.run(cmd)
+    if result.returncode != 0:
+        sys.exit(result.returncode)
 
 def generate(cls,template,dir=None):
     if dir is not None:
@@ -258,5 +279,9 @@ def main():
         generate(ScnClass(cls,obj),template,args.dir)
     else:
         print("Specify a class name, an interface, or --all.")
+        return
+
+    if args.images:
+        render_images(args)
 
 main()

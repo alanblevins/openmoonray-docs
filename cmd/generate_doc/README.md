@@ -17,6 +17,10 @@ Generate docs for all classes with the given interface: `./generate_doc -i LIGHT
 
 Generate docs for all classes: `./generate_doc -a -d <docs_path>`
 
+Add `--images` with `-a` or `-c` to also render the classes' documentation images and videos with
+[generate_doc_images](../generate_doc_images/README.md), e.g. `./generate_doc -c SpotLight -d <docs_path> --images`.
+Only classes with a `manifest.json` have images to render. Rendering is slow, so it's off by default.
+
 Documentation for template format: [jinja](https://jinja.palletsprojects.com/en/3.1.x/templates/)
 
 

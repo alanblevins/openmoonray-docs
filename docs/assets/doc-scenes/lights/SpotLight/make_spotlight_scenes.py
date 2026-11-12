@@ -5,9 +5,10 @@
 Generates the SpotLight documentation scenes using the scene_rdl2 Python API.
 
 Writes a base scene (spotlight_base.rdla) plus one scene per wedge image into
-wedges/, and writes the attributes section of the SpotLight data file
-(docs/_data/.../SpotLight.yml) that puts the images on the reference page.
-With --render, each scene is rendered with moonray and converted to a JPEG.
+wedges/, writes the attributes section of the SpotLight data file
+(docs/_data/.../SpotLight.yml) that puts the images on the reference page, and
+writes manifest.json, which lists the images and videos to render. Render them
+with cmd/generate_doc_images, e.g. `generate_doc_images -c SpotLight`.
 
 Scenes reference textures/ with a relative path, so run moonray from this
 directory. See ../../README.md for environment setup.
@@ -15,6 +16,7 @@ directory. See ../../README.md for environment setup.
 
 import argparse
 import glob
+import json
 import math
 import os
 import shutil
@@ -29,6 +31,10 @@ IMAGE_DIR = os.path.join(DOCS_ROOT, 'assets', 'images', 'user-reference',
                          'scene-objects', 'lights', 'SpotLight')
 DATA_FILE = os.path.join(DOCS_ROOT, '_data', 'user-reference', 'scene-objects',
                          'lights', 'SpotLight.yml')
+MANIFEST_FILE = os.path.join(HERE, 'manifest.json')
+BASE_SCENE = 'spotlight_base.rdla'
+BASE_IMAGE = 'spotlight_base.jpg'
+SPOT_NAME = '/lights/spot'
 
 GOBO_TEXTURE = os.path.join('textures', 'gobo.jpg')
 CARD_TEXTURE = os.path.join('textures', 'test_card.tif')
@@ -253,6 +259,13 @@ LINKS = {
     'ray_termination': [('/user-reference/how-to-guides/ray-depth/', 'Ray depth')],
 }
 
+# Videos of the base scene with one attribute animated, rendered by
+# cmd/generate_doc_images with rdla_wedge. Values are (from, to, caption).
+ANIMATIONS = {
+    'outer_cone_angle': (30.0, 90.0, 'outer_cone_angle animated from 30 to 90 and back'),
+}
+ANIMATION_FRAMES = 16
+
 
 def normalize(v):
     length = math.sqrt(sum(c * c for c in v))
@@ -386,7 +399,7 @@ def build_scene(camera='main', spot=None, spot_aim='angled', spot_aim_end=None,
     geo_set.endUpdate()
 
     # The SpotLight, plus a very dim EnvLight so unlit areas aren't pure black
-    spot_light = ctx.createSceneObject('SpotLight', '/lights/spot')
+    spot_light = ctx.createSceneObject('SpotLight', SPOT_NAME)
     if spot_aim_end is None:
         spot_light.set('node_xform', look_at(*SPOT_AIMS[spot_aim]))
     else:
@@ -475,18 +488,6 @@ def make_textures(oiiotool):
                        check=True)
         os.remove(ppm)
         print('Wrote', texture)
-
-
-def render(scene, image, oiiotool):
-    """Renders scene with moonray and writes an sRGB JPEG to image."""
-    exr = os.path.splitext(image)[0] + '.exr'
-    subprocess.run(['moonray', '-in', scene, '-out', exr], cwd=HERE, check=True,
-                   stdout=subprocess.DEVNULL)
-    os.makedirs(os.path.dirname(image), exist_ok=True)
-    subprocess.run([oiiotool, exr, '--ch', 'R,G,B', '--colorconvert', 'linear', 'sRGB',
-                    '-d', 'uint8', '--quality', '90', '-o', image], check=True)
-    os.remove(exr)
-    print('Rendered', os.path.relpath(image, DOCS_ROOT))
 
 
 def fmt(value):
@@ -582,7 +583,7 @@ def write_data_file(jobs):
     images = {}
     for attr, scene, image, _, _, caption in jobs:
         images.setdefault(attr, []).append((image, caption, scene))
-    for attr in sorted(set(images) | set(LINKS)):
+    for attr in sorted(set(images) | set(ANIMATIONS) | set(LINKS)):
         # Quoted, since YAML would read some names (such as "on") as booleans
         lines.append('  %s:' % yaml_string(attr))
         if attr in images:
@@ -591,6 +592,10 @@ def write_data_file(jobs):
                 lines += ['      - image: %s' % image,
                           '        text: %s' % yaml_string(caption),
                           '        scene: %s' % scene]
+        if attr in ANIMATIONS:
+            lines += ['    videos:',
+                      '      - video: %s' % video_name(attr),
+                      '        text: %s' % yaml_string(ANIMATIONS[attr][2])]
         if attr in LINKS:
             lines.append('    links:')
             for url, link_text in LINKS[attr]:
@@ -601,12 +606,35 @@ def write_data_file(jobs):
     print('Wrote', os.path.relpath(DATA_FILE, DOCS_ROOT))
 
 
+def video_name(attr):
+    return attr + '_anim.mp4'
+
+
+def write_manifest(jobs):
+    """Writes manifest.json, which lists the images and videos for
+    cmd/generate_doc_images to render."""
+    images = [{'scene': BASE_SCENE, 'image': BASE_IMAGE}]
+    images += [{'attr': attr, 'scene': scene, 'image': image}
+               for attr, scene, image, _, _, _ in jobs]
+    animations = [{'object': SPOT_NAME, 'attr': attr, 'from': start, 'to': end,
+                   'scenes': [BASE_SCENE], 'frames': ANIMATION_FRAMES, 'pingpong': True,
+                   'video': video_name(attr)}
+                  for attr, (start, end, _) in sorted(ANIMATIONS.items())]
+    with open(MANIFEST_FILE, 'w') as f:
+        json.dump({'images': images, 'animations': animations}, f, indent=2)
+        f.write('\n')
+    print('Wrote', os.path.relpath(MANIFEST_FILE, DOCS_ROOT))
+
+
 def remove_stale(jobs):
-    """Removes wedge scenes and images that are no longer generated. Only
-    images named after a wedged attribute are touched."""
+    """Removes wedge scenes, images and videos that are no longer generated.
+    Only images named after a wedged attribute, and *_anim.mp4 videos, are
+    touched."""
     keep = {os.path.join(HERE, scene) for _, scene, _, _, _, _ in jobs}
     keep |= {os.path.join(IMAGE_DIR, image) for _, _, image, _, _, _ in jobs}
+    keep |= {os.path.join(IMAGE_DIR, video_name(attr)) for attr in ANIMATIONS}
     stale = glob.glob(os.path.join(HERE, 'wedges', '*.rdla'))
+    stale += glob.glob(os.path.join(IMAGE_DIR, video_name('*')))
     for w in WEDGES:
         stale += glob.glob(os.path.join(IMAGE_DIR, w['attr'] + '_*.jpg'))
     for path in sorted(set(stale) - keep):
@@ -617,10 +645,8 @@ def remove_stale(jobs):
 def main():
     parser = argparse.ArgumentParser(description=__doc__,
                                      formatter_class=argparse.RawDescriptionHelpFormatter)
-    parser.add_argument('--render', action='store_true',
-                        help='render each scene and write JPEGs for the docs')
     parser.add_argument('--only', metavar='ATTRS',
-                        help='only write/render the base scene and the wedges for these '
+                        help='only write the base scene and the wedges for these '
                              'comma-separated attributes')
     args = parser.parse_args()
     only = set(args.only.split(',')) if args.only else None
@@ -635,16 +661,14 @@ def main():
     defaults = scene_rdl2.SceneContext().createSceneObject('SpotLight', '/defaults')
     jobs = wedge_jobs(defaults)
     write_data_file(jobs)
+    write_manifest(jobs)
 
-    scenes = [('spotlight_base.rdla', 'spotlight_base.jpg', {},
-               'Base SpotLight documentation scene')]
-    scenes += [(scene, image, build_args, note)
-               for attr, scene, image, build_args, note, _ in jobs
+    scenes = [(BASE_SCENE, {}, 'Base SpotLight documentation scene')]
+    scenes += [(scene, build_args, note)
+               for attr, scene, _, build_args, note, _ in jobs
                if not only or attr in only]
-    for scene, image, build_args, note in scenes:
+    for scene, build_args, note in scenes:
         write_scene(build_scene(**build_args), os.path.join(HERE, scene), note)
-        if args.render:
-            render(scene, os.path.join(IMAGE_DIR, image), oiiotool)
 
     if not only:
         remove_stale(jobs)

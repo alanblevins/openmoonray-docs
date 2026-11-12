@@ -2,11 +2,12 @@
 Lists the downloadable documentation scenes in assets/doc-scenes/<include.path>.
 Files directly in the folder are listed first; each subfolder is collapsible.
 Markdown files are skipped, since GitHub Pages renders them as pages rather
-than serving them as files.
+than serving them as files, and so is manifest.json, which is only used by
+cmd/generate_doc_images.
 {% endcomment %}
 {% if include.path %}
 {%- assign prefix = "/assets/doc-scenes/" | append: include.path | append: "/" -%}
-{%- assign files = site.static_files | where_exp: "f", "f.path contains prefix" | where_exp: "f", "f.extname != '.md'" | sort: "path" -%}
+{%- assign files = site.static_files | where_exp: "f", "f.path contains prefix" | where_exp: "f", "f.extname != '.md'" | where_exp: "f", "f.extname != '.json'" | sort: "path" -%}
 {% if files.size > 0 %}
 {%- assign subdirs = "" -%}
 {%- for f in files -%}

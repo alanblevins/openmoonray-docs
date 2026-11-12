@@ -287,6 +287,9 @@ attributes:
       - image: outer_cone_angle_90.jpg
         text: "outer_cone_angle = 90, inner_cone_angle = 30"
         scene: wedges/outer_cone_angle_90.rdla
+    videos:
+      - video: outer_cone_angle_anim.mp4
+        text: "outer_cone_angle animated from 30 to 90 and back"
   "presence_shadows":
     images:
       - image: presence_shadows_0_force_off.jpg
