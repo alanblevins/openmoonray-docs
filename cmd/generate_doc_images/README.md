@@ -14,13 +14,23 @@ Other options:
 - `--list` lists the classes that have manifests, with their image and video counts.
 - `--dry-run` shows what would be rendered.
 - `--skip-animations` renders stills only, for machines without `ffmpeg`.
+- `--force` replaces existing images and videos even when the new render looks the same, for example after changing
+  the JPEG or video encoding settings.
 
 `./generate_doc -c <Class> -d <docs_path> --images` (or `-a --images`) in `cmd/generate_doc` runs this tool after
 writing the pages.
 
-An existing image is only replaced once its new render has succeeded. If a render fails, the others still run, and the
-failures are listed at the end with a non-zero exit code. Images removed from a manifest aren't deleted; the script that
-writes the manifest is responsible for that.
+An existing image is only replaced once its new render has succeeded, and only if it looks different. If a render
+fails, the others still run, and the failures are listed at the end with a non-zero exit code. Images removed from a
+manifest aren't deleted; the script that writes the manifest is responsible for that.
+
+## Unchanged renders
+
+MoonRay renders aren't bit-for-bit repeatable, so every render of a scene differs slightly from the last. To avoid
+storing those copies in Git LFS again, each render is compared with the existing file, and the file is left alone
+(reported as `Unchanged`) unless there's a visible difference. Both images are shrunk to 25% with `oiiotool`, which
+averages out most of the noise, and they differ if any pixel differs by more than 0.03, or more than 1% of pixels by
+more than 0.008. A video differs if its frame count differs or any frame does.
 
 ## Requirements
 
@@ -62,6 +72,3 @@ are rendered from there, so relative texture paths work.
 
 The tool doesn't check entries against the class's attributes, and doesn't read or write the class's data file. Add
 images to the page with `images:` and videos with `videos:` entries in the data file, as usual.
-
-Renders aren't bit-for-bit repeatable, so each re-render is stored again in Git LFS. Prefer `--attr` to re-render only
-what changed.

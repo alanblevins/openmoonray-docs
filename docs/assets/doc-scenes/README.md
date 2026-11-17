@@ -65,9 +65,10 @@ cmd/generate_doc_images/generate_doc_images -c SpotLight --attr lens_radius,colo
 Stills need `moonray` and `oiiotool` on `PATH`. Videos also need `ffmpeg` and
 MoonRay's `rdla_wedge`.
 
-MoonRay renders aren't bit-for-bit repeatable, so every re-rendered image
-differs slightly from the last one and is stored again in Git LFS. Re-render
-only the attributes you changed, with `--attr`.
+MoonRay renders aren't bit-for-bit repeatable, so an existing image or video is
+only replaced if the new render looks different; renders that differ only by
+noise are reported as `Unchanged`. Rendering takes a while, so re-render only
+the attributes you changed, with `--attr`.
 
 To change what's shown for an attribute, edit its entry in the script's
 `WEDGES` list (or `ANIMATIONS` for videos), then run both steps again.

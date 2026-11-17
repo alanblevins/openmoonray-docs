@@ -10,6 +10,9 @@ path>/<Class>/ containing its scenes and a manifest.json. Images are written to
 the same relative path under docs/assets/images/user-reference/scene-objects/,
 or to the manifest's image_dir if set. See README.md for the manifest format.
 
+MoonRay renders aren't precisely deterministic, so an existing image or video is only
+replaced if the new render looks different from it, not just noisier.
+
 Stills need moonray and oiiotool on PATH. Animations also need ffmpeg and
 rdla_wedge, and must be run with a Python that can import scene_rdl2.
 """
@@ -30,6 +33,14 @@ IMAGES_SUBDIR = os.path.join('assets', 'images', 'user-reference', 'scene-object
 
 # The same settings rdla_wedge uses for its own MP4 output
 FFMPEG_ARGS = ['-framerate', '10', '-vf', 'format=yuv420p', '-c:v', 'libx264', '-crf', '18']
+
+# Two renders look the same unless, with both shrunk to DIFF_SCALE to average
+# out noise, any pixel differs by more than DIFF_HARD_FAIL, or more than
+# DIFF_FAIL_PERCENT of the pixels by more than DIFF_FAIL.
+DIFF_SCALE = '25%'
+DIFF_FAIL = 0.008
+DIFF_FAIL_PERCENT = 1
+DIFF_HARD_FAIL = 0.03
 
 ANIMATION_KEYS = ('object', 'attr', 'from', 'to', 'scenes', 'frames', 'video')
 
@@ -94,6 +105,43 @@ def replace_file(src, dest):
     shutil.move(src, dest)
 
 
+def looks_same(a, b):
+    """Returns True if images a and b differ only by render noise. Anything
+    oiiotool can't compare, such as a different size, counts as different."""
+    cmd = ['oiiotool', a, '--resize', DIFF_SCALE, b, '--resize', DIFF_SCALE,
+           '--fail', str(DIFF_FAIL), '--failpercent', str(DIFF_FAIL_PERCENT),
+           '--hardfail', str(DIFF_HARD_FAIL), '--diff']
+    return subprocess.run(cmd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL).returncode == 0
+
+
+def video_frames(video, frames_dir):
+    """Decodes video into PPM frames in frames_dir and returns their paths."""
+    os.makedirs(frames_dir)
+    run(['ffmpeg', '-loglevel', 'error', '-i', video, os.path.join(frames_dir, 'f%04d.ppm')],
+        frames_dir)
+    return sorted(glob.glob(os.path.join(frames_dir, 'f*.ppm')))
+
+
+def videos_look_same(a, b, tmp):
+    """Returns True if videos a and b have the same number of frames, and
+    each pair of frames passes looks_same."""
+    try:
+        frames_a = video_frames(a, os.path.join(tmp, 'compare_a'))
+        frames_b = video_frames(b, os.path.join(tmp, 'compare_b'))
+    except RuntimeError:
+        return False
+    return len(frames_a) == len(frames_b) and all(map(looks_same, frames_a, frames_b))
+
+
+def update_file(src, dest, same, force):
+    """Moves src over dest, unless dest exists and same(src, dest) finds no
+    visible difference. Returns True if dest was replaced."""
+    if not force and os.path.exists(dest) and same(src, dest):
+        return False
+    replace_file(src, dest)
+    return True
+
+
 def run(cmd, cwd):
     """Runs cmd, raising RuntimeError with the end of its output on failure."""
     result = subprocess.run(cmd, cwd=cwd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
@@ -112,13 +160,14 @@ def to_srgb(exr, image, cwd, extra_args=()):
          '-d', 'uint8'] + list(extra_args) + ['-o', image], cwd)
 
 
-def render_still(cls, entry, tmp):
+def render_still(cls, entry, tmp, force):
+    """Renders a still, and returns True if the image was replaced."""
     image = os.path.join(cls.image_dir, entry['image'])
     exr = os.path.join(tmp, 'still.exr')
     jpg = os.path.join(tmp, 'still' + os.path.splitext(image)[1])
     run(['moonray', '-in', entry['scene'], '-out', exr], cls.scene_dir)
     to_srgb(exr, jpg, cls.scene_dir, ['--quality', '90'])
-    replace_file(jpg, image)
+    return update_file(jpg, image, looks_same, force)
 
 
 def oiiotool_writes_png():
@@ -130,7 +179,8 @@ def oiiotool_writes_png():
     return False
 
 
-def render_animation(cls, entry, tmp, rdla_wedge, png):
+def render_animation(cls, entry, tmp, rdla_wedge, png, force):
+    """Renders a video, and returns True if the video was replaced."""
     video = os.path.join(cls.image_dir, entry['video'])
     mp4 = os.path.join(tmp, 'out.mp4')
     # rdla_wedge's shebang doesn't work on macOS, so run it with this Python,
@@ -156,7 +206,7 @@ def render_animation(cls, entry, tmp, rdla_wedge, png):
     # rdla_wedge returns success even when its conversion fails
     if not os.path.exists(mp4):
         raise RuntimeError('no video was written')
-    replace_file(mp4, video)
+    return update_file(mp4, video, lambda a, b: videos_look_same(a, b, tmp), force)
 
 
 def select(cls, attrs):
@@ -193,6 +243,9 @@ def parse_args():
                         help='show what would be rendered, without rendering')
     parser.add_argument('--skip-animations', action='store_true',
                         help='render stills only, for machines without ffmpeg')
+    parser.add_argument('--force', action='store_true',
+                        help='replace existing images and videos even if the new render looks the '
+                             'same, for example after changing encoding settings')
     args = parser.parse_args()
     if args.attr and not args.class_name:
         parser.error('--attr needs -c')
@@ -269,13 +322,14 @@ def main():
     png = rdla_wedge is not None and oiiotool_writes_png()
 
     failures = []
+    replaced = []
     for cls, images, animations in jobs:
         for entry in images:
             image = os.path.relpath(os.path.join(cls.image_dir, entry['image']), docs_dir)
             with tempfile.TemporaryDirectory() as tmp:
                 try:
-                    render_still(cls, entry, tmp)
-                    print('Rendered', image)
+                    replaced.append(render_still(cls, entry, tmp, args.force))
+                    print('Updated' if replaced[-1] else 'Unchanged', image)
                 except RuntimeError as e:
                     failures.append((image, str(e)))
                     print('FAILED', image)
@@ -288,12 +342,14 @@ def main():
             # rdla_wedge always works in /tmp/rdla_wedge, so animations run one at a time
             with tempfile.TemporaryDirectory() as tmp:
                 try:
-                    render_animation(cls, entry, tmp, rdla_wedge, png)
-                    print('Rendered', video)
+                    replaced.append(render_animation(cls, entry, tmp, rdla_wedge, png, args.force))
+                    print('Updated' if replaced[-1] else 'Unchanged', video)
                 except RuntimeError as e:
                     failures.append((video, str(e)))
                     print('FAILED', video)
 
+    print('\n%d updated, %d unchanged (no visible difference from the existing file)'
+          % (replaced.count(True), replaced.count(False)))
     if failures:
         print('\n%d failed:' % len(failures))
         for path, message in failures:
