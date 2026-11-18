@@ -1,5 +1,6 @@
 {% comment %}
-Lists the downloadable documentation scenes in assets/doc-scenes/<include.path>.
+Lists the downloadable documentation scenes, and the files used to make them,
+in assets/doc-scenes/<include.path>.
 Files directly in the folder are listed first; each subfolder is collapsible.
 Markdown files are skipped, since GitHub Pages renders them as pages rather
 than serving them as files, and so is manifest.json, which is only used by
@@ -20,7 +21,7 @@ cmd/generate_doc_images.
 {%- assign subdirs = subdirs | split: "|" | uniq -%}
 <div class="doc-scenes">
 <h3 id="example-scenes">Example scenes</h3>
-<p>Scenes and the script that generates them. Images on this page were rendered from these scenes. Keep the folder layout when downloading, since scenes refer to textures with relative paths, and render from the folder containing the script, e.g. <code>moonray -in wedges/&lt;scene&gt;.rdla -out out.exr</code>.</p>
+<p>The scenes that images on this page were rendered from, along with the textures, scripts and other files used to make them. Keep the folder layout when downloading, since scenes refer to other files with relative paths, and render from the top folder, e.g. <code>moonray -in scenes/&lt;scene&gt;.rdla -out out.exr</code>.</p>
 <ul>
 {%- for f in files -%}
   {%- assign rel = f.path | remove_first: prefix -%}

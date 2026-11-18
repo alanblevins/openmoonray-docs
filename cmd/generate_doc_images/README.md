@@ -22,7 +22,7 @@ writing the pages.
 
 An existing image is only replaced once its new render has succeeded, and only if it looks different. If a render
 fails, the others still run, and the failures are listed at the end with a non-zero exit code. Images removed from a
-manifest aren't deleted; the script that writes the manifest is responsible for that.
+manifest aren't deleted; whoever edits the manifest, by hand or with a script, is responsible for that.
 
 ## Unchanged renders
 
@@ -38,9 +38,8 @@ more than 0.008. A video differs if its frame count differs or any frame does.
 - Videos: also `ffmpeg` and MoonRay's `rdla_wedge` on `PATH`, and a Python that can import `scene_rdl2`, since
   `rdla_wedge` is run with the same Python as this tool. The wrapper uses `${PYTHON:-python3}`.
 
-On macOS, run `generate_doc_images.py` directly with the Python from the
-[doc-scenes setup](../../docs/assets/doc-scenes/README.md#macos-notes). The `generate_doc_images` wrapper runs through
-`/bin/sh`, which loses `DYLD_LIBRARY_PATH`, so `rdla_wedge` can't import `scene_rdl2`.
+On macOS, run `generate_doc_images.py` directly with a Python that can import `scene_rdl2`. The `generate_doc_images`
+wrapper runs through `/bin/sh`, which loses `DYLD_LIBRARY_PATH`, so `rdla_wedge` can't import `scene_rdl2`.
 
 ## Manifest
 
@@ -53,7 +52,7 @@ are rendered from there, so relative texture paths work.
 {
   "images": [
     {"scene": "spotlight_base.rdla", "image": "spotlight_base.jpg"},
-    {"attr": "lens_radius", "scene": "wedges/lens_radius_3.rdla", "image": "lens_radius_3.jpg"}
+    {"attr": "lens_radius", "scene": "scenes/lens_radius_3.rdla", "image": "lens_radius_3.jpg"}
   ],
   "animations": [
     {"object": "/lights/spot", "attr": "outer_cone_angle", "from": 30.0, "to": 90.0,
