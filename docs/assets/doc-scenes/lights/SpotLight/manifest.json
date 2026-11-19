@@ -296,13 +296,13 @@
     },
     {
       "attr": "clear_radius",
-      "scene": "scenes/clear_radius_5.2.rdla",
-      "image": "clear_radius_5.2.jpg"
+      "scene": "scenes/clear_radius_5.8.rdla",
+      "image": "clear_radius_5.8.jpg"
     },
     {
       "attr": "clear_radius",
-      "scene": "scenes/clear_radius_5.8.rdla",
-      "image": "clear_radius_5.8.jpg"
+      "scene": "scenes/clear_radius_6.2.rdla",
+      "image": "clear_radius_6.2.jpg"
     },
     {
       "attr": "clear_radius",
@@ -646,6 +646,30 @@
     }
   ],
   "animations": [
+    {
+      "object": "/lights/spot",
+      "attr": "clear_radius_falloff_distance",
+      "from": 0.5,
+      "to": 5.0,
+      "scenes": [
+        "scenes/clear_radius_falloff_distance_2.rdla"
+      ],
+      "frames": 16,
+      "pingpong": true,
+      "video": "clear_radius_falloff_distance_anim.mp4"
+    },
+    {
+      "object": "/lights/spot",
+      "attr": "inner_cone_angle",
+      "from": 0.0,
+      "to": 60.0,
+      "scenes": [
+        "spotlight_base.rdla"
+      ],
+      "frames": 16,
+      "pingpong": true,
+      "video": "inner_cone_angle_anim.mp4"
+    },
     {
       "object": "/lights/spot",
       "attr": "outer_cone_angle",

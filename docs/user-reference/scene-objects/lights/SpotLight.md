@@ -272,7 +272,7 @@ title: SpotLight
       <b>Float</b>
       <br>
       default: 0.0
-      <p class="scene-class-comments">Objects closer than this distance to the light do not cast shadows from it. Setting this value to 0.0 or less effectively disables this feature. When clear_radius_falloff_distance is greater than 0, it is instead the distance of the light-receiving point from the light that is used: points closer than clear_radius receive no shadows from the light.</p>
+      <p class="scene-class-comments">Surfaces closer than this distance to the light don't block it, so they cast no shadows from it. An object partly inside this distance casts shadows only from its parts outside it. Setting this value to 0.0 or less effectively disables this feature. When clear_radius_falloff_distance is greater than 0, it is instead the distance of the light-receiving point from the light that is used: points closer than clear_radius receive no shadows from the light.</p>
       {%-include image-gallery.html images=site.data.user-reference.scene-objects.lights.SpotLight.attributes.clear_radius.images data=site.data.user-reference.scene-objects.lights.SpotLight-%}
       {%-include video-gallery.html videos=site.data.user-reference.scene-objects.lights.SpotLight.attributes.clear_radius.videos data=site.data.user-reference.scene-objects.lights.SpotLight-%}
       {%-include see-also.html links=site.data.user-reference.scene-objects.lights.SpotLight.attributes.clear_radius.links heading=4-%}

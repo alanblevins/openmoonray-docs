@@ -57,39 +57,42 @@ attributes:
       - image: clear_radius_0.jpg
         text: "clear_radius = 0 (default), post lit from the left"
         scene: scenes/clear_radius_0.rdla
-      - image: clear_radius_5.2.jpg
-        text: "clear_radius = 5.2, post lit from the left"
-        scene: scenes/clear_radius_5.2.rdla
       - image: clear_radius_5.8.jpg
         text: "clear_radius = 5.8, post lit from the left"
         scene: scenes/clear_radius_5.8.rdla
+      - image: clear_radius_6.2.jpg
+        text: "clear_radius = 6.2, post lit from the left"
+        scene: scenes/clear_radius_6.2.rdla
       - image: clear_radius_7.jpg
         text: "clear_radius = 7, post lit from the left"
         scene: scenes/clear_radius_7.rdla
   "clear_radius_falloff_distance":
     images:
       - image: clear_radius_falloff_distance_0.jpg
-        text: "clear_radius_falloff_distance = 0 (default), clear_radius = 6.5, post lit from the left"
+        text: "clear_radius_falloff_distance = 0 (default), no shadow (the whole post is within clear_radius), clear_radius = 8, post lit from the left, seen from above"
         scene: scenes/clear_radius_falloff_distance_0.rdla
       - image: clear_radius_falloff_distance_2.jpg
-        text: "clear_radius_falloff_distance = 2, clear_radius = 6.5, post lit from the left"
+        text: "clear_radius_falloff_distance = 2, clear_radius = 8, post lit from the left, seen from above"
         scene: scenes/clear_radius_falloff_distance_2.rdla
       - image: clear_radius_falloff_distance_5.jpg
-        text: "clear_radius_falloff_distance = 5, clear_radius = 6.5, post lit from the left"
+        text: "clear_radius_falloff_distance = 5, clear_radius = 8, post lit from the left, seen from above"
         scene: scenes/clear_radius_falloff_distance_5.rdla
+    videos:
+      - video: clear_radius_falloff_distance_anim.mp4
+        text: "clear_radius_falloff_distance animated from 0.5 to 5 and back, clear_radius = 8, post lit from the left, seen from above"
   "clear_radius_interpolation_type":
     images:
       - image: clear_radius_interpolation_type_0_linear.jpg
-        text: "0 = linear (default), clear_radius = 6.6, clear_radius_falloff_distance = 5, post lit from the left, seen from above"
+        text: "0 = linear (default), clear_radius = 6.6, clear_radius_falloff_distance = 5, wide post lit from the left, seen from above, zoomed in on the falloff"
         scene: scenes/clear_radius_interpolation_type_0_linear.rdla
       - image: clear_radius_interpolation_type_1_exponential_up.jpg
-        text: "1 = exponential_up, clear_radius = 6.6, clear_radius_falloff_distance = 5, post lit from the left, seen from above"
+        text: "1 = exponential_up, clear_radius = 6.6, clear_radius_falloff_distance = 5, wide post lit from the left, seen from above, zoomed in on the falloff"
         scene: scenes/clear_radius_interpolation_type_1_exponential_up.rdla
       - image: clear_radius_interpolation_type_2_exponential_down.jpg
-        text: "2 = exponential_down, clear_radius = 6.6, clear_radius_falloff_distance = 5, post lit from the left, seen from above"
+        text: "2 = exponential_down, clear_radius = 6.6, clear_radius_falloff_distance = 5, wide post lit from the left, seen from above, zoomed in on the falloff"
         scene: scenes/clear_radius_interpolation_type_2_exponential_down.rdla
       - image: clear_radius_interpolation_type_3_smoothstep.jpg
-        text: "3 = smoothstep, clear_radius = 6.6, clear_radius_falloff_distance = 5, post lit from the left, seen from above"
+        text: "3 = smoothstep, clear_radius = 6.6, clear_radius_falloff_distance = 5, wide post lit from the left, seen from above, zoomed in on the falloff"
         scene: scenes/clear_radius_interpolation_type_3_smoothstep.rdla
   "color":
     images:
@@ -174,6 +177,9 @@ attributes:
       - image: inner_cone_angle_60.jpg
         text: "inner_cone_angle = 60, outer_cone_angle = 60"
         scene: scenes/inner_cone_angle_60.rdla
+    videos:
+      - video: inner_cone_angle_anim.mp4
+        text: "inner_cone_angle animated from 0 to 60 and back, outer_cone_angle = 60"
   "intensity":
     images:
       - image: intensity_0.025.jpg

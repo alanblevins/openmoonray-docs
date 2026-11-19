@@ -64,6 +64,7 @@ SPOT_AIMS = {
 #   texture -- looking straight down, framed on the pool of light
 #   backlit -- low, looking through the props at the 'back' light
 #   shadow  -- looking straight down at the post's shadow
+#   shadow_ramp -- the same, zoomed in on where the shadow fades in
 CAMERAS = {
     'main': ([0.0, 9.0, 16.0], [0.0, 0.5, -1.5], [0.0, 1.0, 0.0], 30.0),
     'lens': ([6.7, 3.4, -4.9], [0.0, 4.4, 1.6], [0.0, 1.0, 0.0], 16.0),
@@ -71,6 +72,7 @@ CAMERAS = {
     'texture': ([0.0, 40.0, -1.0], [0.0, 0.0, -1.0], [0.0, 0.0, -1.0], 48.0),
     'backlit': ([0.0, 1.6, 8.0], [0.0, 1.0, -1.0], [0.0, 1.0, 0.0], 35.0),
     'shadow': ([1.5, 22.0, -1.5], [1.5, 0.0, -1.5], [0.0, 0.0, -1.0], 30.0),
+    'shadow_ramp': ([1.15, 22.0, -1.5], [1.15, 0.0, -1.5], [0.0, 0.0, -1.0], 70.0),
 }
 
 # Attribute values for the base scene. SpotLight attributes not listed here
@@ -177,17 +179,26 @@ WEDGES = [
           caption='post lit from the left', **SHADOW_VIEW),
     wedge('max_shadow_distance', [(0.0, '0'), (3.0, '3'), (1.5, '1.5'), (0.5, '0.5')],
           caption='post lit from the left', **SHADOW_VIEW),
-    wedge('clear_radius', [(0.0, '0'), (5.2, '5.2'), (5.8, '5.8'), (7.0, '7')],
+    wedge('clear_radius', [(0.0, '0'), (5.8, '5.8'), (6.2, '6.2'), (7.0, '7')],
           caption='post lit from the left', **SHADOW_VIEW),
-    wedge('clear_radius_falloff_distance', [(0.0, '0'), (2.0, '2'), (5.0, '5')],
-          caption='clear_radius = 6.5, post lit from the left',
-          **merged(SHADOW_VIEW, {'spot': {'clear_radius': 6.5}})),
+    # The post spans about 4.8 to 6.6 units from the light, all inside
+    # clear_radius, so with no falloff it casts no shadow. With a falloff,
+    # the floor's distance from the light is used instead: the shadow is
+    # clear up to x = -0.07 (8 units), then fades in until x = 2.2 (10 units)
+    # or x = 5.4 (13 units).
+    wedge('clear_radius_falloff_distance',
+          [(0.0, '0', {'caption': 'no shadow (the whole post is within clear_radius)'}),
+           (2.0, '2'), (5.0, '5')],
+          caption='clear_radius = 8, post lit from the left, seen from above',
+          **merged(SHADOW_VIEW, {'camera': 'shadow', 'spot': {'clear_radius': 8.0}})),
+    # Zoomed in on the falloff, which runs from the post (6.6 units from the
+    # light) to about x = 3.9 (11.6 units)
     wedge('clear_radius_interpolation_type',
           [(0, '0_linear'), (1, '1_exponential_up'), (2, '2_exponential_down'),
            (3, '3_smoothstep')],
-          caption='clear_radius = 6.6, clear_radius_falloff_distance = 5, post lit from the left, '
-                  'seen from above',
-          **merged(SHADOW_VIEW, {'camera': 'shadow',
+          caption='clear_radius = 6.6, clear_radius_falloff_distance = 5, wide post lit from the '
+                  'left, seen from above, zoomed in on the falloff',
+          **merged(SHADOW_VIEW, {'camera': 'shadow_ramp', 'props': 'wide_post',
                                  'spot': {'clear_radius': 6.6,
                                           'clear_radius_falloff_distance': 5.0}})),
     # The camera's shutter is open for the whole move, so mb = false shows
@@ -262,10 +273,19 @@ LINKS = {
     'ray_termination': [('/user-reference/how-to-guides/ray-depth/', 'Ray depth')],
 }
 
-# Videos of the base scene with one attribute animated, rendered by
-# cmd/generate_doc_images with rdla_wedge. Values are (from, to, caption).
+# Videos of a scene with one attribute animated, rendered by
+# cmd/generate_doc_images with rdla_wedge. Values are (from, to, caption), plus
+# optionally the scene to animate, which is the base scene by default.
 ANIMATIONS = {
+    'inner_cone_angle': (0.0, 60.0, 'inner_cone_angle animated from 0 to 60 and back, '
+                                    'outer_cone_angle = 60'),
     'outer_cone_angle': (30.0, 90.0, 'outer_cone_angle animated from 30 to 90 and back'),
+    # Starts above 0, where clear_radius would measure the post's distance
+    # instead and the shadow would vanish
+    'clear_radius_falloff_distance': (
+        0.5, 5.0, 'clear_radius_falloff_distance animated from 0.5 to 5 and back, '
+                  'clear_radius = 8, post lit from the left, seen from above',
+        'scenes/clear_radius_falloff_distance_2.rdla'),
 }
 ANIMATION_FRAMES = 16
 
@@ -335,10 +355,11 @@ def make_props(ctx, props):
                                   presence=0.3)
         return [(sphere(ctx, '/geometry/sphere', [-1.4, 1.0, -1.5]), sphere_mtl),
                 (box(ctx, '/geometry/box', [1.5, 0.75, -0.8], (1.5, 1.5, 1.5)), box_mtl)]
-    if props == 'post':
-        # A tall post, for long shadows
+    if props in ('post', 'wide_post'):
+        # A tall post, for long shadows; 'wide_post' casts a wide one
         post_mtl = material(ctx, '/materials/prop', albedo=[0.7, 0.7, 0.7])
-        return [(box(ctx, '/geometry/post', [-2.0, 1.5, -1.5], (0.6, 3.0, 0.6)), post_mtl)]
+        depth = 2.4 if props == 'wide_post' else 0.6
+        return [(box(ctx, '/geometry/post', [-2.0, 1.5, -1.5], (0.6, 3.0, depth)), post_mtl)]
     if props == 'reflect':
         glossy = material(ctx, '/materials/glossy_metal', specular=1.0, metallic=1.0,
                           roughness=0.35)
@@ -619,10 +640,10 @@ def write_manifest(jobs):
     images = [{'scene': BASE_SCENE, 'image': BASE_IMAGE}]
     images += [{'attr': attr, 'scene': scene, 'image': image}
                for attr, scene, image, _, _, _ in jobs]
-    animations = [{'object': SPOT_NAME, 'attr': attr, 'from': start, 'to': end,
-                   'scenes': [BASE_SCENE], 'frames': ANIMATION_FRAMES, 'pingpong': True,
-                   'video': video_name(attr)}
-                  for attr, (start, end, _) in sorted(ANIMATIONS.items())]
+    animations = [{'object': SPOT_NAME, 'attr': attr, 'from': anim[0], 'to': anim[1],
+                   'scenes': [anim[3] if len(anim) > 3 else BASE_SCENE],
+                   'frames': ANIMATION_FRAMES, 'pingpong': True, 'video': video_name(attr)}
+                  for attr, anim in sorted(ANIMATIONS.items())]
     with open(MANIFEST_FILE, 'w') as f:
         json.dump({'images': images, 'animations': animations}, f, indent=2)
         f.write('\n')
