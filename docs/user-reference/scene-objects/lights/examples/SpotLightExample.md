@@ -12,5 +12,3 @@ SpotLight("/lights/spot") {
     ["angle_falloff_type"] = "ease out",
 }
 ```
-
-For complete scenes you can download and render, see the example scenes below.

@@ -77,7 +77,6 @@ for example with the `scene_rdl2` Python API. It should:
   saying which script generated them, so that they aren't edited by hand
 - remove scenes and images it no longer generates
 
-Generated files are not edited by hand: change the script and run it again.
 Each script's `--help` describes its options. Scripts that use `scene_rdl2`
 need a Python of the version its bindings were built against (3.9 for current
 releases), with the bindings on `PYTHONPATH`:
@@ -100,10 +99,6 @@ cmd/generate_doc_images/generate_doc_images -c <Class>
 cmd/generate_doc_images/generate_doc_images -c <Class> --attr <attribute>,<attribute>
 ```
 
-Stills need `moonray` and `oiiotool` on `PATH`. Videos also need `ffmpeg` and
-MoonRay's `rdla_wedge`.
-
-MoonRay renders aren't bit-for-bit repeatable, so an existing image or video is
-only replaced if the new render looks different; renders that differ only by
-noise are reported as `Unchanged`. Rendering takes a while, so re-render only
-the attributes you changed, with `--attr`.
+Rendering takes a while, so re-render only the attributes you changed, with
+`--attr`. See the `generate_doc_images` README for requirements and how
+unchanged renders are detected.

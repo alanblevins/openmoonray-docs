@@ -99,12 +99,6 @@ def format_value(value):
     return '%g' % value
 
 
-def replace_file(src, dest):
-    """Moves src over dest, so dest is only replaced once src is complete."""
-    os.makedirs(os.path.dirname(dest), exist_ok=True)
-    shutil.move(src, dest)
-
-
 def looks_same(a, b):
     """Returns True if images a and b differ only by render noise. Anything
     oiiotool can't compare, such as a different size, counts as different."""
@@ -135,10 +129,12 @@ def videos_look_same(a, b, tmp):
 
 def update_file(src, dest, same, force):
     """Moves src over dest, unless dest exists and same(src, dest) finds no
-    visible difference. Returns True if dest was replaced."""
+    visible difference. dest is only replaced once src is complete. Returns
+    True if dest was replaced."""
     if not force and os.path.exists(dest) and same(src, dest):
         return False
-    replace_file(src, dest)
+    os.makedirs(os.path.dirname(dest), exist_ok=True)
+    shutil.move(src, dest)
     return True
 
 
@@ -170,43 +166,42 @@ def render_still(cls, entry, tmp, force):
     return update_file(jpg, image, looks_same, force)
 
 
-def oiiotool_writes_png():
-    help_text = subprocess.run(['oiiotool', '--help'], stdout=subprocess.PIPE,
-                               universal_newlines=True).stdout
-    for line in help_text.splitlines():
-        if line.startswith('Output formats supported:'):
-            return 'png' in line.split(':', 1)[1].replace(',', ' ').split()
-    return False
-
-
-def render_animation(cls, entry, tmp, rdla_wedge, png, force):
-    """Renders a video, and returns True if the video was replaced."""
+def render_animation(cls, entry, tmp, force):
+    """Renders a video, and returns True if the video was replaced. rdla_wedge
+    only renders the frames, which are converted like stills rather than by
+    rdla_wedge, whose conversion depends on oiiotool writing PNG."""
     video = os.path.join(cls.image_dir, entry['video'])
     mp4 = os.path.join(tmp, 'out.mp4')
+    frames = os.path.join(tmp, 'frames')
     # rdla_wedge's shebang doesn't work on macOS, so run it with this Python,
     # which also has to be able to import scene_rdl2
-    cmd = [sys.executable, rdla_wedge,
+    cmd = [sys.executable, shutil.which('rdla_wedge'),
            '--animate-parameter', entry['object'], entry['attr'],
            format_value(entry['from']), format_value(entry['to']),
            '--pingpong' if entry.get('pingpong') else '--inclusive']
-    cmd += entry['scenes'] + [str(entry['frames'])]
-    if png:
-        run(cmd + [mp4], cls.scene_dir)
-    else:
-        frames = os.path.join(tmp, 'frames')
-        run(cmd + [os.path.join(frames, 'out.*.exr')], cls.scene_dir)
-        exrs = sorted(glob.glob(os.path.join(frames, 'out.*.exr')))
-        if not exrs:
-            raise RuntimeError('rdla_wedge wrote no frames')
-        for i, exr in enumerate(exrs):
-            to_srgb(exr, os.path.join(frames, 'frame_%04d.ppm' % i), cls.scene_dir)
-        run(['ffmpeg', '-y', '-loglevel', 'error'] + FFMPEG_ARGS[:2] +
-            ['-i', os.path.join(frames, 'frame_%04d.ppm')] + FFMPEG_ARGS[2:] + [mp4],
-            cls.scene_dir)
-    # rdla_wedge returns success even when its conversion fails
-    if not os.path.exists(mp4):
-        raise RuntimeError('no video was written')
+    cmd += entry['scenes'] + [str(entry['frames']), os.path.join(frames, 'out.*.exr')]
+    run(cmd, cls.scene_dir)
+    exrs = sorted(glob.glob(os.path.join(frames, 'out.*.exr')))
+    if not exrs:
+        raise RuntimeError('rdla_wedge wrote no frames')
+    for i, exr in enumerate(exrs):
+        to_srgb(exr, os.path.join(frames, 'frame_%04d.ppm' % i), cls.scene_dir)
+    run(['ffmpeg', '-y', '-loglevel', 'error'] + FFMPEG_ARGS[:2] +
+        ['-i', os.path.join(frames, 'frame_%04d.ppm')] + FFMPEG_ARGS[2:] + [mp4],
+        cls.scene_dir)
     return update_file(mp4, video, lambda a, b: videos_look_same(a, b, tmp), force)
+
+
+def animation_problem():
+    """Returns why animations can't be rendered, or None if they can."""
+    if shutil.which('ffmpeg') is None:
+        return 'ffmpeg not found on PATH (use --skip-animations to render stills only)'
+    if subprocess.run([sys.executable, '-c', 'import scene_rdl2'],
+                      stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL).returncode != 0:
+        # On macOS this usually means DYLD_LIBRARY_PATH was lost by running
+        # through the shell wrapper
+        return '%s can\'t import scene_rdl2, which rdla_wedge needs; see README.md' % sys.executable
+    return None
 
 
 def select(cls, attrs):
@@ -302,51 +297,31 @@ def main():
                          os.path.relpath(os.path.join(cls.image_dir, e['video']))))
         return
 
-    tools = ['moonray', 'oiiotool']
-    if any(animations for _, _, animations in jobs):
-        tools.append('rdla_wedge')
+    has_animations = any(animations for _, _, animations in jobs)
+    tools = ['moonray', 'oiiotool'] + (['rdla_wedge'] if has_animations else [])
     missing = [t for t in tools if shutil.which(t) is None]
     if missing:
         sys.exit('Error: not found on PATH: %s' % ', '.join(missing))
-    animation_problem = None
-    rdla_wedge = shutil.which('rdla_wedge')
-    if shutil.which('ffmpeg') is None:
-        animation_problem = 'ffmpeg not found on PATH (use --skip-animations to render stills only)'
-    elif rdla_wedge and subprocess.run([sys.executable, '-c', 'import scene_rdl2'],
-                                       stdout=subprocess.DEVNULL,
-                                       stderr=subprocess.DEVNULL).returncode != 0:
-        # On macOS this usually means DYLD_LIBRARY_PATH was lost by running
-        # through the shell wrapper
-        animation_problem = ('%s can\'t import scene_rdl2, which rdla_wedge needs; see README.md'
-                             % sys.executable)
-    png = rdla_wedge is not None and oiiotool_writes_png()
+    problem = animation_problem() if has_animations else None
 
     failures = []
     replaced = []
     for cls, images, animations in jobs:
-        for entry in images:
-            image = os.path.relpath(os.path.join(cls.image_dir, entry['image']), docs_dir)
+        for entry in images + animations:
+            is_video = 'video' in entry
+            path = os.path.relpath(os.path.join(cls.image_dir, entry['video' if is_video else 'image']),
+                                   docs_dir)
+            # rdla_wedge always works in /tmp/rdla_wedge, so renders run one at a time
             with tempfile.TemporaryDirectory() as tmp:
                 try:
-                    replaced.append(render_still(cls, entry, tmp, args.force))
-                    print('Updated' if replaced[-1] else 'Unchanged', image)
+                    if is_video and problem:
+                        raise RuntimeError(problem)
+                    render = render_animation if is_video else render_still
+                    replaced.append(render(cls, entry, tmp, args.force))
+                    print('Updated' if replaced[-1] else 'Unchanged', path)
                 except RuntimeError as e:
-                    failures.append((image, str(e)))
-                    print('FAILED', image)
-        for entry in animations:
-            video = os.path.relpath(os.path.join(cls.image_dir, entry['video']), docs_dir)
-            if animation_problem:
-                failures.append((video, animation_problem))
-                print('FAILED', video)
-                continue
-            # rdla_wedge always works in /tmp/rdla_wedge, so animations run one at a time
-            with tempfile.TemporaryDirectory() as tmp:
-                try:
-                    replaced.append(render_animation(cls, entry, tmp, rdla_wedge, png, args.force))
-                    print('Updated' if replaced[-1] else 'Unchanged', video)
-                except RuntimeError as e:
-                    failures.append((video, str(e)))
-                    print('FAILED', video)
+                    failures.append((path, str(e)))
+                    print('FAILED', path)
 
     print('\n%d updated, %d unchanged (no visible difference from the existing file)'
           % (replaced.count(True), replaced.count(False)))

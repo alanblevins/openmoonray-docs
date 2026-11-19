@@ -570,13 +570,11 @@ def wedge_jobs(defaults):
             if parts:
                 caption += ', ' + ', '.join(parts)
 
-            note = 'Base scene with SpotLight %s = %s' % (attr, fmt(value))
+            note = 'SpotLight %s = %s' % (attr, fmt(value))
             others = ['%s = %s' % (k, fmt(v)) for k, v in args.get('spot', {}).items()
                       if k != attr]
             others += ['SceneVariables %s = %s' % (k, fmt(v))
                        for k, v in args.get('scene_vars', {}).items()]
-            others += ['%s = %s' % (k, fmt(v)) for k, v in args.items()
-                       if k not in ('spot', 'scene_vars')]
             if others:
                 note += '; ' + ', '.join(others)
 
@@ -590,6 +588,10 @@ def yaml_string(text):
 
 
 DATA_MARKER = '# Attribute images and links below are generated'
+
+
+def video_name(attr):
+    return attr + '_anim.mp4'
 
 
 def write_data_file(jobs):
@@ -628,10 +630,6 @@ def write_data_file(jobs):
     with open(DATA_FILE, 'w') as f:
         f.write(text[:start] + '\n'.join(lines) + '\n')
     print('Wrote', os.path.relpath(DATA_FILE, DOCS_ROOT))
-
-
-def video_name(attr):
-    return attr + '_anim.mp4'
 
 
 def write_manifest(jobs):
