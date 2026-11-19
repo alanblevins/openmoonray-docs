@@ -290,25 +290,14 @@ ANIMATIONS = {
 ANIMATION_FRAMES = 16
 
 
-def normalize(v):
-    length = math.sqrt(sum(c * c for c in v))
-    return [c / length for c in v]
-
-
-def cross(a, b):
-    return [a[1] * b[2] - a[2] * b[1],
-            a[2] * b[0] - a[0] * b[2],
-            a[0] * b[1] - a[1] * b[0]]
-
-
 def look_at(eye, target, up):
     """Row-major 4x4 transform (as a flat list) placing an object at eye with
     its local -z axis pointing at target and its local y axis towards up.
     Cameras and SpotLights both look down their local -z axis."""
-    z = normalize([e - t for e, t in zip(eye, target)])
-    x = normalize(cross(up, z))
-    y = cross(z, x)
-    return x + [0.0] + y + [0.0] + z + [0.0] + list(eye) + [1.0]
+    xform = scene_rdl2.Xform3f.lookAtPoint(scene_rdl2.Vec3f(*eye), scene_rdl2.Vec3f(*target),
+                                           scene_rdl2.Vec3f(*up))
+    rows = [(xform.l.vx, 0.0), (xform.l.vy, 0.0), (xform.l.vz, 0.0), (xform.p, 1.0)]
+    return [c for row, w in rows for c in (row.x, row.y, row.z, w)]
 
 
 def translate(t, scale=(1.0, 1.0, 1.0)):

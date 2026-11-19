@@ -67,7 +67,9 @@ are rendered from there, so relative texture paths work.
   frames of `scenes`, using `rdla_wedge --animate-parameter`. Colors and vectors are lists, such as
   `"from": [1, 0, 0]`. With `pingpong`, it animates there and back; otherwise the last frame reaches `to`. `scenes`
   can list more than one file, with later files overriding earlier ones, for example to lower the resolution. Videos
-  are H.264 MP4 at 10 frames per second, so the scene's width and height must be even.
+  are H.264 MP4 at 10 frames per second, with the same settings `rdla_wedge` uses. They use the yuv420p pixel format,
+  which browsers need, and which stores color at half the width and height of the image, so the scene's width and
+  height must be even.
 
 The tool doesn't check entries against the class's attributes, and doesn't read or write the class's data file. Add
 images to the page with `images:` and videos with `videos:` entries in the data file, as usual.
